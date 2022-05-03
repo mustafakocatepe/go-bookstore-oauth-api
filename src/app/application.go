@@ -12,6 +12,7 @@ var (
 )
 
 func StartApplication() {
+	_
 	atService := access_token.NewService(db.NewRepository())
 	atHandler := http.NewHandler(atService)
 

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/mustafakocatepe/go-bookstore-oauth-api/src/clients/cassandra"
 	"github.com/mustafakocatepe/go-bookstore-oauth-api/src/domain/access_token"
 	"github.com/mustafakocatepe/go-bookstore-oauth-api/src/utils/errors"
 )
@@ -17,5 +18,8 @@ func NewRepository() DbRepository {
 }
 
 func (r *dbRepository) GetById(id string) (*access_token.AccessToken, *errors.RestErr) {
+	session := cassandra.GetSession()
+	defer session.Close()
+
 	return nil, errors.NewInternalServerError("database connection not implemented yet")
 }
