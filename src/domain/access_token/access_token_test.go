@@ -13,11 +13,11 @@ func TestAccessTokenConstants(t *testing.T) {
 		t.Error()
 	}*/
 
-	assert.EqualValues(t, 24, expirationtime, "expiration time should be 24 hours")
+	assert.EqualValues(t, 24, expirationTime, "expiration time should be 24 hours")
 }
 
 func TestGetNewAccessToken(t *testing.T) {
-	at := GetNewAccessToken()
+	at := GetNewAccessToken(5) //TODO :Github kontrol et.
 
 	/*if at.IsExpired() {
 		t.Error("brand new access token should not be expired")
