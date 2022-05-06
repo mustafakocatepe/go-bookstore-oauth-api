@@ -1,15 +1,17 @@
 package rest
 
 import (
+	"bytes"
 	"encoding/json"
-	resty "github.com/go-resty/resty/v2"
+	"fmt"
 	"github.com/mustafakocatepe/go-bookstore-oauth-api/src/domain/users"
 	"github.com/mustafakocatepe/go-bookstore-oauth-api/src/utils/errors"
-	"time"
+	"net/http"
 )
 
 var (
-	usersRestClient = resty.New().SetBaseURL("http://localhost:8082").SetTimeout(100 * time.Millisecond)
+	Client  http.Client
+	baseUrl = "http://localhost:8082"
 )
 
 type RestUsersRepository interface {
@@ -17,12 +19,57 @@ type RestUsersRepository interface {
 }
 
 type restUsersRepository struct {
+	Client *http.Client
 }
 
 func NewRepository() RestUsersRepository {
-	return &restUsersRepository{}
+	return &restUsersRepository{Client: &http.Client{}}
 }
 
+func (r *restUsersRepository) LoginUser(email string, password string) (*users.User, *errors.RestErr) {
+	requestModel := users.UserLoginRequest{
+		Email:    email,
+		Password: password,
+	}
+
+	url := fmt.Sprintf("%s/users/login", baseUrl)
+
+	postBody, _ := json.Marshal(requestModel)
+	responseBody := bytes.NewBuffer(postBody)
+
+	request, _ := http.NewRequest(http.MethodPost, url, responseBody)
+	request.Header.Add("Accept", "application/json")
+
+	response, _ := r.Client.Do(request)
+
+	/*if err != nil {
+		return nil, errors.NewInternalServerError("invalid restclient response when trying to login user")
+	}*/
+
+	if response.StatusCode > 299 {
+		var restErr errors.RestErr
+		/*err := json.Unmarshal(response.Body, &restErr)
+		if err != nil {
+			return nil, errors.NewInternalServerError("invalid error interface when trying to login user")
+		}*/
+		return nil, &restErr
+	}
+
+	user := users.User{
+		Id:        1,
+		FirstName: "Mustafa",
+		LastName:  "Kocatepe",
+		Email:     "msk@gmail.com",
+	}
+
+	/*if err := json.Unmarshal(response.Body(), &user); err != nil {
+		return nil, errors.NewInternalServerError("error when trying to unmarshal users login response")
+	}*/
+	return &user, nil
+
+}
+
+/*
 func (r *restUsersRepository) LoginUser(email string, password string) (*users.User, *errors.RestErr) {
 	request := users.UserLoginRequest{
 		Email:    email,
@@ -31,6 +78,7 @@ func (r *restUsersRepository) LoginUser(email string, password string) (*users.U
 	response, err := usersRestClient.R().
 		SetBody(request).
 		Post("/users/login")
+
 
 	if err != nil {
 		return nil, errors.NewInternalServerError("invalid restclient response when trying to login user")
@@ -51,4 +99,4 @@ func (r *restUsersRepository) LoginUser(email string, password string) (*users.U
 	}
 	return &user, nil
 
-}
+}*/
