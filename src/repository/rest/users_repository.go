@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/mustafakocatepe/go-bookstore-oauth-api/src/domain/users"
 	"github.com/mustafakocatepe/go-bookstore-oauth-api/src/utils/errors"
+	"io"
 	"net/http"
 )
 
@@ -26,7 +27,7 @@ func NewRepository() RestUsersRepository {
 	return &restUsersRepository{Client: &http.Client{}}
 }
 
-func (r *restUsersRepository) LoginUser(email string, password string) (*users.User, *errors.RestErr) {
+func (r *restUsersRepository) LoginUser(email string, password string) (user *users.User, error *errors.RestErr) {
 	requestModel := users.UserLoginRequest{
 		Email:    email,
 		Password: password,
@@ -40,33 +41,35 @@ func (r *restUsersRepository) LoginUser(email string, password string) (*users.U
 	request, _ := http.NewRequest(http.MethodPost, url, responseBody)
 	request.Header.Add("Accept", "application/json")
 
-	response, _ := r.Client.Do(request)
+	response, err := r.Client.Do(request)
 
-	/*if err != nil {
+	if err != nil {
 		return nil, errors.NewInternalServerError("invalid restclient response when trying to login user")
-	}*/
+	}
 
-	if response.StatusCode > 299 {
+	body, err := io.ReadAll(response.Body)
+	defer response.Body.Close()
+	if err != nil {
+		return nil, errors.NewInternalServerError("invalid restclient response when trying to login user")
+
+	}
+	if err := json.Unmarshal(body, &user); err != nil {
+		return nil, errors.NewInternalServerError("invalid restclient response when trying to login user")
+
+	}
+
+	if response.StatusCode != 200 {
 		var restErr errors.RestErr
-		/*err := json.Unmarshal(response.Body, &restErr)
-		if err != nil {
-			return nil, errors.NewInternalServerError("invalid error interface when trying to login user")
-		}*/
+
+		if err := json.Unmarshal(body, &restErr); err != nil {
+			return nil, errors.NewInternalServerError("invalid restclient response when trying to login user")
+
+		}
+
 		return nil, &restErr
 	}
 
-	user := users.User{
-		Id:        1,
-		FirstName: "Mustafa",
-		LastName:  "Kocatepe",
-		Email:     "msk@gmail.com",
-	}
-
-	/*if err := json.Unmarshal(response.Body(), &user); err != nil {
-		return nil, errors.NewInternalServerError("error when trying to unmarshal users login response")
-	}*/
-	return &user, nil
-
+	return user, nil
 }
 
 /*

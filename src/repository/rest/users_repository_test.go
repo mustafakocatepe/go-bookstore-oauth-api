@@ -8,11 +8,16 @@ import (
 	"testing"
 )
 
+//Ana dizindeyken terminalden aşağıdaki komut ile test çalıştırılabilir.
+//go test ./src/repository/rest -v
+
 //This is the entry point of our test cases.
 func TestMain(m *testing.M) {
 	fmt.Println("about to start test cases... ")
-	//resty.New()
-	os.Exit(m.Run())
+
+	//m.Run() komutu ile o dosyadaki tüm test fonksiyonları çağrılır.
+	exitCode := m.Run() //Run runs the tests. It returns an exit code to pass to os.Exit.
+	os.Exit(exitCode)
 }
 
 //We are going to have a single test case for each return statement that we have.
@@ -26,19 +31,18 @@ func TestLoginUserTimeoutFromApi(t *testing.T) {
 			t.Errorf("Expected Accept: application/json header, got: %s", r.Header.Get("Accept"))
 		}
 
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusNotImplemented)
 		w.Write([]byte(`{"id":1,",first_name :"mustafa","last_name:"kocatepe","email":"m@gmail.com"}`))
 	}))
 	defer server.Close()
 
 	baseUrl = server.URL
 	repository := restUsersRepository{Client: server.Client()}
-	response, err := repository.LoginUser("test@gmail.com", "password")
-	if response == nil {
+	_, err := repository.LoginUser("tes@test.com", "test")
+
+	if err != nil {
 		t.Errorf("MSK")
 	}
-	println(response)
-	println(err)
 
 }
 
